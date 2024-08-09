@@ -1,8 +1,9 @@
 function res = green_residuals(m, x, y, z, u, recstds, tilt, nanstatsbeg)
 
-mHMM = m(1:8);
-mSC = m(9:16);
-consts = m(17:end);
+mHMM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, m(1)];
+% mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
+mSC = [277.01, 1621.47, m(2:end)];
+% consts = m(17:end);
 
 % tilt(1) = tilt(1) * cos(tiltoffset(1)) - sin(tiltoffset(1));
 % tilt(2) = tilt(2) * cos(tiltoffset(1)) + sin(tiltoffset(1));
@@ -11,7 +12,7 @@ constsfull = zeros(length(nanstatsbeg), 3);
 j = 1;
 for i = 1:length(nanstatsbeg)
     if(nanstatsbeg(i) == 1)
-        constsfull(i, :) = consts(j);
+        % constsfull(i, :) = consts(j);
         j = j + 1;
     end
 end
@@ -22,9 +23,16 @@ clear j i consts
 
 [~, dHMM, ~, ~] = spheroid(mHMM, [x(end); y(end); z(end)], 0.25, 3.08*10^9);
 [~, dSC, ~, ~] = spheroid(mSC, [x(end); y(end); z(end)], 0.25, 3.08*10^9);
+if(~isreal(dHMM) || ~isreal(dSC))
+    res = 1e10;
+    return;
+end
+
 gtot = gHMM + gSC;
 
-gTilt = [atan2(dHMM(3), 1), atan2(dHMM(6), 1)] .* 1e6 + [atan2(dSC(3), 1), atan2(dSC(6), 1)] .* 1e6;
+[gTiltHMM, gTiltSC] = createtiltgreens(mHMM, mSC, 0, false); % [atan2(real(dHMM(3)), 1), atan2(real(dHMM(6)), 1)] .* 1e6 + [atan2(real(dSC(3)), 1), atan2(real(dSC(6)), 1)] .* 1e6;
+gTilt = gTiltHMM + gTiltSC;
+% gTilt = gtilt(1)
 rest = tilt - gTilt;
 resd = u + constsfull - gtot';
 weights = [recstds(1) .* ones(1, length(x) - 1), recstds(2) .* ones(1, length(x) -1), recstds(3) .* ones(1, length(x) - 1), recstds(4:5)];

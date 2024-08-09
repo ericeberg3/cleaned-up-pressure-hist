@@ -112,11 +112,11 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     spheroid(mSC);
     hold off;
     
-    [gHMM, ~, ~, ~] = spheroid(mHMM, [x; y; z(1:length(x))], 0.25, 3.08*10^9);
-    [gSC, ~, ~, ~] = spheroid(mSC, [x; y; z(1:length(x))], 0.25, 3.08*10^9);
-    
-    [~, dHMM, ~, ~] = spheroid(mHMM, [xtilt; ytilt; 0], 0.25, 3.08*10^9);
-    [~, dSC, ~, ~] = spheroid(mSC, [xtilt; ytilt; 0], 0.25, 3.08*10^9);
+    % [gHMM, ~, ~, ~] = spheroid(mHMM, [x; y; z(1:length(x))], 0.25, 3.08*10^9);
+    % [gSC, ~, ~, ~] = spheroid(mSC, [x; y; z(1:length(x))], 0.25, 3.08*10^9);
+
+    [gHMM, gSC] = creategreens(mHMM, mSC);
+    [gTiltHMM, gTiltSC] = createtiltgreens(mHMM, mSC, 0, false);
     
     tiltscale = 1e-3;
     u1d = u(:, :, end-100);
@@ -125,10 +125,9 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     u1d(end, 3) = zeros(length(tiltreduced(1)), 1);
     x(end+1) = xtilt;
     y(end+1) = ytilt;
-    
-    gTilt = createtiltgreens(mHMM, mSC, dtheta, false);
+   
     gtot = gHMM + gSC;
-    gtot(:, end + 1) = [gTilt, 0] .* tiltscale;
+    gtot(:, end + 1) = [(gTiltHMM + gTiltSC), 0] .* tiltscale;
     
     
     hold off;
@@ -138,6 +137,8 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     plot3(mSCguess(5),mSCguess(6), mSCguess(7), '.', 'MarkerSize', 20, 'Color', '#f77036', 'HandleVisibility','off');
     quiver3(mSCguess(5),mSCguess(6), mSCguess(7), optimizedM(13) - mSCguess(5), optimizedM(14) - mSCguess(6), optimizedM(15) - mSCguess(7), 'AutoScale', 'off', 'LineWidth', 2.75, 'MaxHeadSize', 0.5, 'Color', '#f77036', 'DisplayName','SC Center Shift');
     simquiver = quiver3(x', y', zeros(size(x))', gtot(1, :)' * radscale, gtot(2, :)' * radscale, gtot(3, :)' * radscale, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#A2142F', 'DisplayName','Optimization Result');
+    quiver3(x(end), y(end), 0, gTiltHMM(1) * 3e1, gTiltHMM(2) * 1e1, 0, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#023799', 'DisplayName','HMM Greens fcn');
+    quiver3(x(end), y(end), 0, gTiltSC(1) * 3e1, gTiltSC(2) * 1e1, 0, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#910299', 'DisplayName','SC Greens fcn');
     xlabel('x (m)');
     ylabel('y (m)');
     zlabel('Scaled Displacement (m)');

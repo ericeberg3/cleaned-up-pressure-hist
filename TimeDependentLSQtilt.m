@@ -14,7 +14,6 @@ function dp = TimeDependentLSQtilt(gHMMflat, gSCflat, gTiltHMM, gTiltSC, ux, uy,
     
     gtotHMM(nanstations) = [];
     gtotSC(nanstations) = [];
-    gtotTilt = cat(1, gTiltHMM', gTiltSC');
     nstat = size(ux, 1);
     ux(nanstations(1:nstat), :) = [];
     uy(nanstations(nstat+1:nstat*2), :) = [];
@@ -59,7 +58,7 @@ function dp = TimeDependentLSQtilt(gHMMflat, gSCflat, gTiltHMM, gTiltSC, ux, uy,
         % The random walk standard deviation sigma that I am using is the
         % standard deviation from the no-signal period (incorrect, change
         % later)
-        sigma = 0.8;
+        sigma = 0.8; % 0.8
         % Sigma_{i, i}
         tiltW(i, i) = 1/(2*sigma^2) * (2/deltat);
         tiltW(i + ntime, i+ntime) = 1/(2*sigma^2) * (2/deltat);

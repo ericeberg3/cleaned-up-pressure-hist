@@ -16,8 +16,9 @@ function [gTiltHMM, gTiltSC] = createtiltgreens(mHMM, mSC, dtheta, keep)
     [~, dSC, ~, ~] = spheroid(mSC, [x; y; z], 0.25, 3.08*10^9);
     
     % Convert rad to urad
-    gTiltHMM = real([atan2(dHMM(3), -1), atan2(dHMM(6), 1)]) .* 1e6; % real([atan2(dHMM(3) * cos(dtheta) - dHMM(6) * sin(dtheta), 1), atan2(dHMM(3) * sin(dtheta) + dHMM(6) * cos(dtheta), 1)]) .* 1e6;
-    gTiltSC = real([atan2(dSC(3), -1), atan2(dSC(6), 1)]) .* 1e6; % real([atan2(dSC(3) * cos(dtheta) - dSC(6) * sin(dtheta), 1), atan2(dSC(3) * sin(dtheta) + dSC(6) * cos(dtheta), 1)]) .* 1e6;
+    % Negative sign included to put the atan in the correct quadrant
+    gTiltHMM = -real([atan2(dHMM(3), 1), atan2(dHMM(6), 1)]) .* 1e6; % real([atan2(dHMM(3) * cos(dtheta) - dHMM(6) * sin(dtheta), 1), atan2(dHMM(3) * sin(dtheta) + dHMM(6) * cos(dtheta), 1)]) .* 1e6;
+    gTiltSC = -real([atan2(dSC(3), 1), atan2(dSC(6), 1)]) .* 1e6; % real([atan2(dSC(3) * cos(dtheta) - dSC(6) * sin(dtheta), 1), atan2(dSC(3) * sin(dtheta) + dSC(6) * cos(dtheta), 1)]) .* 1e6;
     
     if(keep)
         save Data/gTiltHMM.mat

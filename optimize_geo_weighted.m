@@ -44,7 +44,7 @@ tilts = interp1(universalt, tilts, t, 'linear');
 
 % Tilt standard dev. is calculated by taking the mean of the E and N
 % components from April 11th - April 18th 2018
-tilts = tilts - tilts(1, :);
+tilts = (tilts - tilts(1, :));
 tilts(1, :) = 0;
 tiltstd = std(sdh_clean.d(1e5:1.1e5, 1:2), 1);
 tiltstd = mean(tiltstd);
@@ -71,7 +71,6 @@ nstat = nstat - 1;
 % displacements / tilts
 finalindex = 100;
 u1d = u(:, :, end-finalindex);
-tiltreduced = tilts(end-finalindex, :) - tilts(1, :);
 
 nanstatend = isnan(u1d(:, 2));
 nanstatbeginning = isnan(u(: , 1, 1));
@@ -83,6 +82,7 @@ nanstatend(find(contains(GPSNameList,'BYRL')), :, :) = 1;
 
 % Delete nan stations from the data
 u1d = u1d(~nanstatend, :);
+tiltreduced = tilts(end-finalindex, :) - tilts(1, :);
 xopt = x(~nanstatend);
 yopt = y(~nanstatend);
 zopt = zeros(1, length(xopt));
@@ -108,55 +108,29 @@ npitloc = llh2local(npitloc(1:2), [-155.2784, 19.4073]) * 1000;
 vertscale = 4e3;
 radscale = 4e3;
 
-%% Making a guess and optimizing the parameters to create an estimate of the HMM and SC geometries 
-
-mHMMguess = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, 1e7]; % [1124.79, 914.47, 90, 0, 70.3, 183, -1940, dp];
-mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
-
-dposen = 2e3; % meters
-dposup = 1000; % meters
-dsize = 4e2; % meters
-dangle = 63; % degrees
-deltap = 1e8; % Pa
-
-offsetslb = -1 * ones(size(offsets));
-offsetsub = 1 * ones(size(offsets));
-
-tiltlb = [-pi/2, 0]; % east, north
-tiltub = [pi/2, pi/4];
-
-% Setting lower and upper bounds
-lb = [mHMMguess(1:7), 0, mSCguess(1:2), mSCguess(3), mSCguess(4), mSCguess(5:6) - dposen, mSCguess(7) - dposup, 0, offsetslb];
-ub = [mHMMguess(1:7), 3e6, mSCguess(1:2), 90, mSCguess(4), mSCguess(5:6) + dposen, mSCguess(7), mSCguess(8) + deltap, offsetsub];
-
-% Setting up weighting scheme
+% Setting up weights for optimization
 invStdPWRL = 1./std(squeeze(u(11, :, :)), 0, 2, "omitmissing");
 invStdPWRL = invStdPWRL(:);
 
-% Setting function for optimization
-f = @(m)green_residuals(m, [xopt, xtilt], [yopt, ytilt], [zopt, 0], u1d, ...
-    [invStdPWRL(1), invStdPWRL(2), invStdPWRL(3),1/((tiltstd)), 1/((tiltstd))], tiltreduced(1:2), nanstatbeginning);
+%% Optimizing SC geometry
+mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
 
-%% Optimization of chamber geometry
-% This is commented out so that it doesn't run every time the code is run.
-% If you'd like to re-run the optimization, uncomment lines 140-142 and
-% comment 144 and 145
-options = optimoptions(@fmincon, 'PlotFcn', 'optimplotfval', 'OptimalityTolerance', 1e-20, ...
-    'ConstraintTolerance', 1e-20, 'MaxIter', 1000, 'MaxFunctionEvaluations', 1e4, 'StepTolerance', 1e-20); % 'display', 'iter'
-% [optimizedM, res] = fmincon(f, [mHMMguess, mSCguess, offsets], [], [], [], [], lb, ub, [], options);
+% Use taiyi's priors except for strike angle and delta p
+% lb = [0, 60, 126, mSCguess(5) - 150, mSCguess(6) - 200, -3.85e3, 0];
+% ub = [8e6, 120, 146, mSCguess(5) + 150, mSCguess(6) + 200, -3.43e3, 2e7];
 
-% Use multistart
-% problem = createOptimProblem('fmincon','objective', f,'x0',[mHMMguess, mSCguess, rand * pi/4, rand * pi/4, offsets],'lb',lb, ...
-%     'ub',ub,'options',options);
-% ms = MultiStart;
-% [optimizedM, res] = run(ms,problem,10);
+% Let the parameters be mostly free
+lb = [-5e6, 60, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
+ub = [0, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
 
-optimizedM = [1600.79000000000	914.470000000000	90	0	70.3000000000000	183	-1940	2999999.99992412	277.010000000000	1621.47000000000	89.9999774942710	136	162.745313651300	-479.303502915132	-4620.30457577829	12317057.4035003];
-res = 79.436;
+load('optimized_geometry.mat', 'optParams')
+% optParams = optimize_SC_bayes(mSCguess, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+optimizedM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, optParams.dpHMM, 277.01, 1621.47, optParams.dip, optParams.strike, optParams.x1, optParams.x2, optParams.x3, optParams.dpSC];
+% optimizedM =[1600.79000000000	914.470000000000	90	0	70.3000000000000	183	-1940	-2999999.99992412	277.010000000000	1621.47000000000	89.9999774942710	136	162.745313651300	-479.303502915132	-4620.30457577829   -12317057.4035003];
 
-disp("Final Residual = " + res);
 offsets = optimizedM(17:end);
 optimizedM = optimizedM(1:16);
+
 
 %% Now optimize for the tilt orientation:
 % f = @(t)green_residuals_tilt(t, [optimizedM, offsets], [xopt, xtilt], [yopt, ytilt], [zopt, 0], u1d, ...
@@ -170,9 +144,6 @@ disp("Optimized theta = " + rad2deg(dtheta))
 
 % tilts(:, 1) = 1e6 * atan(tan(1e-6 * tilts(:, 1)) * cos(dtheta) - tan(1e-6 * tilts(:, 2)) * sin(dtheta));
 % tilts(:, 2) = 1e6 * atan(tan(1e-6 * tilts(:, 2)) * sin(dtheta) + tan(1e-6 * tilts(:, 2)) * cos(dtheta));
-
-tiltreduced = tilts(end-finalindex, :) - tilts(1, :);
-
 
 % Adding the optimized offsets to the GPS data
 j = 1;
@@ -202,9 +173,7 @@ gSCflat = gSCflat(:);
 gTiltHMMflat = gTiltHMM';
 
 ntime = max(size(u(1,1,:)));
-dpHMM = zeros(1, ntime);
-dpSC = zeros(1, ntime);
-dp = [dpHMM', dpSC'];
+
 tiltx = tilts(:, 1); % * (cos(dtheta) - sin(dtheta))/cos(dphi); 
 tilty = tilts(:, 2); % * (cos(dtheta) + sin(dtheta))/cos(dphi);
 
@@ -225,7 +194,7 @@ usim = zeros(max(size(dp)), size(gHMM, 1), size(gHMM, 2));
 for i = 1:max(size(dp))
     % **** SETTING THE SIMULATED DISPLACEMENTS ****
     usim(i, :, 1:nstat) =  (gHMM .* dp(i, 1)) + (gSC .* dp(i, 2)) ;
-    usim(i, :, nstat + 1) = [gTiltSC .* dp(i, 1) + gTiltHMM .* dp(i, 2), 0];
+    usim(i, :, nstat + 1) = [gTiltHMM .* dp(i, 1) + gTiltSC .* dp(i, 2), 0];
 end
 
 %% Extract collapse amplitudes

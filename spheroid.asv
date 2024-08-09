@@ -44,8 +44,8 @@ function varargout = spheroid(m,xyz,nu,mu,flag)
 %  (1) [X1,X2,X3] are the coordinates of the center of the spheroid.
 %      X3, therefore, should always be negative.
 %
-%  (2) Strike is reckoned clockwise from north (0°). The spheroid
-%      dips in the strike direction, with 0° being horizontal and 90°
+%  (2) Strike is reckoned clockwise from north (0Â°). The spheroid
+%      dips in the strike direction, with 0Â° being horizontal and 90Â°
 %      being vertical.
 %
 %  (3) If a = b, the solution reduces to the spherical point source (aka
@@ -53,7 +53,7 @@ function varargout = spheroid(m,xyz,nu,mu,flag)
 %
 %  (4) The sign convention is such that a negative pressure change produces
 %      an "inflationary" pattern of deformation. NOTE: This has been
-%      changed to a more intuitive negative pressure = deflation
+%      changed to a more intuitive o
 %
 %  (5) Called with a single argument, the model vector, the code plots the
 %      spheroid, evaluates the pressure change on the internal cavity wall,
@@ -513,7 +513,7 @@ function sigma = draw
     xlabel('Easting (km)','FontSize',FONTSIZE,'FontName',FONTNAME)
     ylabel('Northing (km)','FontSize',FONTSIZE,'FontName',FONTNAME)
     zlabel('Vertical (km)','FontSize',FONTSIZE,'FontName',FONTNAME)
-    title(sprintf('dip = %0.1f°, strike = %0.1f°, Maximum deviation: %.2f%%, Mean deviation: %.2f%%\n', ...
+    title(sprintf('dip = %0.1fÂ°, strike = %0.1fÂ°, Maximum deviation: %.2f%%, Mean deviation: %.2f%%\n', ...
                    dip,strike,max(abs(CData(:))),mean(CData(:))),'FontSize',FONTSIZE,'FontName',FONTNAME);
 
     acb = colorbar;

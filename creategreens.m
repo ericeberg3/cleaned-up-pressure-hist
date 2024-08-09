@@ -11,8 +11,6 @@ function [gHMM, gSC] = creategreens(mHMM, mSC)
     [gHMM, ~, ~, ~] = spheroid(mHMM, [x; y; z], 0.25, 3.08*10^9);
     [gSC, ~, ~, ~] = spheroid(mSC, [x; y; z], 0.25, 3.08*10^9);
     
-    % Must flip sign of the Green's functions bc this is for a decrease
-    % in pressure, not increase
-    gHMM = -real(gHMM);
-    gSC = -real(gSC);
+    gHMM = real(gHMM);
+    gSC = real(gSC);
 end
