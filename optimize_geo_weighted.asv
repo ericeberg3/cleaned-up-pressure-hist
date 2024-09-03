@@ -69,7 +69,7 @@ nstat = nstat - 1;
 % Only get the displacement data from the first and last timestamp for
 % use in chamber optimization. u1d & tiltreduced are the long term
 % displacements / tilts
-finalindex = 114;
+finalindex = 110;
 u1d = u(:, :, end-finalindex);
 
 nanstatend = isnan(u1d(:, 2));
@@ -124,8 +124,8 @@ lb = [-5e6, 60, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
 ub = [0, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
 
 % load('optimized_geometry.mat', 'optParams')
-% optParams = optimize_SC_bayes(mSCguess, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
-% optimizedM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, optParams.dpHMM, 277.01, 1621.47, optParams.dip, optParams.strike, optParams.x1, optParams.x2, optParams.x3, optParams.dpSC];
+optParams = optimize_SC_bayes(mSCguess, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+optimizedM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, optParams.dpHMM, 277.01, 1621.47, optParams.dip, optParams.strike, optParams.x1, optParams.x2, optParams.x3, optParams.dpSC];
 % optimizedM =[1600.79000000000	914.470000000000	90	0	70.3000000000000	183	-1940	-2999999.99992412	277.010000000000	1621.47000000000	89.9999774942710	136	162.745313651300	-479.303502915132	-4620.30457577829   -12317057.4035003];
 
 offsets = optimizedM(17:end);
