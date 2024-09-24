@@ -115,19 +115,27 @@ invStdPWRL = invStdPWRL(:);
 %% Optimizing SC geometry
 mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
 
+
 % Use taiyi's priors except for strike angle and delta p
+% taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
+%     277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
+% taiyi_parameters_flat_SC = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
+    % 277.01, 1621.47, 90, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
 % lb = [-4e6, 60, 126, mSCguess(5) - 150, mSCguess(6) - 200, -3.85e3, -2e7];
 % ub = [-2e6, 120, 146, mSCguess(5) + 150, mSCguess(6) + 200, -3.43e3, -3e6];
 
 % Let the parameters be mostly free
-lb = [-5e6, 60, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
-ub = [0, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
+% dpHMM, vertical semi-diameter, horizontal semi-diameter, dip, strike, x1,
+% x2, x3, dpSC
+lb = [-5e6, 100, 1e3, 50, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
+ub = [0, 1e3, 1e4, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
 
 % load('optimized_geometry.mat', 'optParams')
-% optParams = optimize_SC_bayes(mSCguess, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
-% optimizedM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, optParams.dpHMM, 277.01, 1621.47, optParams.dip, optParams.strike, optParams.x1, optParams.x2, optParams.x3, optParams.dpSC];
+optParams = optimize_SC_bayes(mSCguess, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+optimizedM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, optParams.dpHMM, optParams.vert_sd, optParams.horiz_sd, optParams.dip, optParams.strike, optParams.x1, optParams.x2, optParams.x3, optParams.dpSC];
 % optimizedM =[1600.79000000000	914.470000000000	90	0	70.3000000000000	183	-1940	-2999999.99992412	277.010000000000	1621.47000000000	89.9999774942710	136	162.745313651300	-479.303502915132	-4620.30457577829   -12317057.4035003];
 
+% optimizedM = taiyi_parameters_flat_SC;
 offsets = optimizedM(17:end);
 optimizedM = optimizedM(1:16);
 

@@ -132,6 +132,7 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     
     hold off;
     figure(6);
+    clf;
     realquiver = quiver3(x', y', zeros(size(x))', u1d(:, 1) * radscale, u1d(:, 2) * radscale, u1d(:, 3) * radscale, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#4DBEEE', 'DisplayName', 'Data');
     hold on;
     plot3(mSCguess(5),mSCguess(6), mSCguess(7), '.', 'MarkerSize', 20, 'Color', '#f77036', 'HandleVisibility','off');
@@ -139,6 +140,9 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     simquiver = quiver3(x', y', zeros(size(x))', gtot(1, :)' * radscale, gtot(2, :)' * radscale, gtot(3, :)' * radscale, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#A2142F', 'DisplayName','Optimization Result');
     quiver3(x(end), y(end), 0, gTiltHMM(1) * 3e1, gTiltHMM(2) * 3e1, 0, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#023799', 'DisplayName','HMM Greens fcn');
     quiver3(x(end), y(end), 0, gTiltSC(1) * 1e1, gTiltSC(2) * 1e1, 0, 'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#910299', 'DisplayName','SC Greens fcn');
+    % ellipsoid(mHMM(5),mHMM(6),mHMM(7),mHMM(2) * sind(mHMM(3)) * cosd(mHMM(4)),mHMM(2) * sind(mHMM(3)) * cosd(mHMM(4)),mHMM(1) * sind(mHMM(3)))
+    % ellipsoid(0, 0, -1940, 1000, 1000, 1000)
+    
     xlabel('x (m)');
     ylabel('y (m)');
     zlabel('Scaled Displacement (m)');

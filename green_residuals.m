@@ -2,7 +2,7 @@ function res = green_residuals(m, x, y, z, u, recstds, tilt, nanstatsbeg)
 
 mHMM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, m(1)];
 % mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
-mSC = [277.01, 1621.47, m(2:end)];
+mSC = [m(2:end)];
 % consts = m(17:end);
 
 % tilt(1) = tilt(1) * cos(tiltoffset(1)) - sin(tiltoffset(1));
