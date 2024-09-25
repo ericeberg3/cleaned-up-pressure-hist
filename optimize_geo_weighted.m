@@ -117,8 +117,8 @@ mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -363
 
 
 % Use taiyi's priors except for strike angle and delta p
-% taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
-%     277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
+taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
+    277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
 % taiyi_parameters_flat_SC = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
     % 277.01, 1621.47, 90, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
 % lb = [-4e6, 60, 126, mSCguess(5) - 150, mSCguess(6) - 200, -3.85e3, -2e7];
@@ -127,8 +127,10 @@ mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -363
 % Let the parameters be mostly free
 % dpHMM, vertical semi-diameter, horizontal semi-diameter, dip, strike, x1,
 % x2, x3, dpSC
-lb = [-5e6, 100, 1e3, 50, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
-ub = [0, 1e3, 1e4, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
+% lb = [-5e6, 100, 1e3, 60, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
+% ub = [0, 1e3, 1e4, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
+lb = [-5e6, 100, 1e3, 62, 135.9, mSCguess(5) - 1e-2, mSCguess(6) - 1e-2, taiyi_parameters(15)-1e-2, -1e7];
+ub = [0, 1e3, 1e4, 63, 136.1, mSCguess(5) + 1e-2, mSCguess(6) + 1e-2, taiyi_parameters(15)+1e-2, -9e6];
 
 % load('optimized_geometry.mat', 'optParams')
 optParams = optimize_SC_bayes(mSCguess, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);

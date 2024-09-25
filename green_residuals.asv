@@ -1,4 +1,4 @@
-function res = green_residuals(m, x, y, z, u, recstds, tilt, nanstatsbeg, priormeans, priorvariances)
+function res = green_residuals(m, x, y, z, u, recstds, tilt, nanstatsbeg)
 
 mHMM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, m(1)];
 % mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
@@ -44,11 +44,13 @@ W = diag(weights);
 res = ([reshape(resd.',1,[]), 0 * reshape(rest.',1,[])]); % NOTE: tilt residual is NOT included due to long term drift concerns
 
 % Gaussian prior penalty
-prior_residuals = (m - priormeans).^2 ./ priormeans.^2;
-prior_penalty = sum(prior_residuals);
+prior_residuals = (m - priormeans).^2 ./ priorvariances;
 
-res = real(res * (W.^2 * res') * 1e-5)  + prior_penalty;
-% res = prior_penalty;
+
+
+
+res = real(res * (W.^2 * res') * 1);
+
 
 % disp("Sim tilt: " + gTilt + " Real tilt: " + tilt + "\n")
 % disp(dot(res, res'))
