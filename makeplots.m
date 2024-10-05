@@ -1,5 +1,5 @@
 function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, collapset, ...
-    dp, optimizedM, GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, mSCguess, coast_new, dtheta)
+    dp, optimizedM, GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, mSCguess, coast_new, dtheta, disptype)
     %% Plots
     % Convert time into matlab dateyear
     year = floor(t);
@@ -27,7 +27,7 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     
     %% Making grid of displacements and tilt
     figure(7);
-    disptype = 2; % 1 = x, 2 = y, 3 = z
+    % disptype = 2; % 1 = x, 2 = y, 3 = z
     
     tlo = tiledlayout(4,4);
     if(disptype == 1)

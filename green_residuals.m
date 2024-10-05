@@ -1,8 +1,11 @@
-function res = green_residuals(m, x, y, z, u, recstds, tilt, nanstatsbeg, priormeans, priorvariances)
+function res = green_residuals(m, m_guess, x, y, z, u, recstds, tilt, nanstatsbeg, priormeans, priorvariances)
 
-mHMM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, m(1)];
-% mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
-mSC = [m(2:end)];
+npitloc = coord('NPIT', 'llh');
+npitloc = llh2local(npitloc(1:2), [-155.2784, 19.4073]) * 1000;
+mHMM = [m_guess(1:7), m(1)];
+% mHMM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, m(1)];
+mSCguess = m_guess(9:end); % [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
+mSC = [m(2:4), mSCguess(4:end-1), m(end)];
 % consts = m(17:end);
 
 % tilt(1) = tilt(1) * cos(tiltoffset(1)) - sin(tiltoffset(1));
@@ -47,7 +50,7 @@ res = ([reshape(resd.',1,[]), 0 * reshape(rest.',1,[])]); % NOTE: tilt residual 
 prior_residuals = (m - priormeans).^2 ./ priormeans.^2;
 prior_penalty = sum(prior_residuals);
 
-res = real(res * (W.^2 * res') * 1e-5)  + prior_penalty;
+res = real(res * (W.^2 * res') * 1e-5); %  + prior_penalty;
 % res = prior_penalty;
 
 % disp("Sim tilt: " + gTilt + " Real tilt: " + tilt + "\n")
