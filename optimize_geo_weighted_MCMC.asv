@@ -120,7 +120,7 @@ mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -363
 taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
     277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
 % taiyi_parameters(1:2) = [2015, 1151]; % 2x volume
-taiyi_parameters(7) = -2400; % 2x volume
+% taiyi_parameters(7) = -2340; % 2x volume
 
 % taiyi_parameters(1:2) = [2540, 1450]; % 4x volume
 % taiyi_parameters(7) = -2880; % 4x volume
@@ -134,18 +134,19 @@ taiyi_parameters(7) = -2400; % 2x volume
 % x2, x3, dpSC
 % lb = [-5e6, 100, 1e3, 60, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
 % ub = [0, 1e3, 1e4, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
-lb = [-10e6, 100, 1e3, 62, -1e7];
-ub = [0, 1e3, 1e4, 90, -9e6];
+% ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
+lb = [1e3, -10e6, 100, 1e3, 62, -1e7];
+ub = [, 0, 1e3, 1e4, 90, -9e6];
 
-% optParams = optimize_SC_MCMC(mSCguess, taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+optParams = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+
 % Old optimization routine
-optParams = optimize_SC_bayes(mSCguess, taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
-optimizedM = [taiyi_parameters(1:7), optParams.dpHMM, optParams.vert_sd, optParams.horiz_sd, optParams.dip, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, optParams.dpSC];
+% optParams = optimize_SC_bayes(mSCguess, taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+% optimizedM = [taiyi_parameters(1:7), optParams.dpHMM, optParams.vert_sd, optParams.horiz_sd, optParams.dip, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, optParams.dpSC];
 % optimizedM =[1600.79000000000	914.470000000000	90	0	70.3000000000000	183	-1940	-2999999.99992412	277.010000000000	1621.47000000000	89.9999774942710	136	162.745313651300	-479.303502915132	-4620.30457577829   -12317057.4035003];
 
 % optimizedM = taiyi_parameters_flat_SC;
-offsets = optimizedM(17:end);
-optimizedM = optimizedM(1:16);
+optimizedM = [taiyi_parameters(1:7), optParams(1:4)', 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, optParams(5)];
 
 
 %% Now optimize for the tilt orientation:
