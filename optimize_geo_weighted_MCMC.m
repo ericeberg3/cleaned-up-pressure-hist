@@ -117,7 +117,7 @@ mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -363
 
 
 % Use taiyi's priors except for strike angle and delta p
-taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
+taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -2.18e3, -3e6, ... 
     277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
 % taiyi_parameters(1:2) = [2015, 1151]; % 2x volume
 % taiyi_parameters(7) = -2340; % 2x volume
@@ -136,15 +136,18 @@ taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ...
 % ub = [0, 1e3, 1e4, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
 
 % ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
-lb = [3.9e9, -10e6, 100, 1e3, 62, -1e7];
-ub = [5*3.9e9, 0, 1e3, 1e4, 90, -9e6];
+lb = [3.9e9, -10e6, 150, 700, 62, -1e7];
+ub = [5*3.9e9, 0, 500, 2500, 90, -9e6];
 
 optParams = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
 
 % optimizedM = taiyi_parameters_flat_SC;
-optimizedM = [taiyi_parameters(1:7), optParams(1:4)', 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, optParams(5)];
+aspect_ratio = 1.7496;
+opt_vert_sd = (3/(4*pi) * optParams(1) * (aspect_ratio^2))^(1/3);
+opt_horiz_sd = opt_vert_sd/(aspect_ratio);
+optimizedM = [opt_vert_sd, opt_horiz_sd, taiyi_parameters(3:7), optParams(2:5)', 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, optParams(6)];
 
-
+clear opt_vert_sd opt_horiz_sd
 %% Now optimize for the tilt orientation:
 % f = @(t)green_residuals_tilt(t, [optimizedM, offsets], [xopt, xtilt], [yopt, ytilt], [zopt, 0], u1d, ...
 %     [invStdPWRL(1), invStdPWRL(2), invStdPWRL(3),1/((tiltstd)), 1/((tiltstd))], tiltreduced(1:2), nanstatbeginning);

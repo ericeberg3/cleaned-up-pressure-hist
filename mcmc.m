@@ -43,7 +43,11 @@ x = x0;
 L = 0;
 
 count=0;
-xstep = x0 * xstep;
+xstep_int = xstep;
+xstep = xbnds(:,2)' * xstep;
+% Set step for negative values to be lower bounds:
+xstep(2) = xbnds(2,1) * xstep_int; % dpHMM
+xstep(6) = xbnds(6,1) * xstep_int; % dpSC
 for k=1:Niter
     
     % generate proposal
@@ -60,12 +64,12 @@ for k=1:Niter
         %Lprop = exp(-0.5*(norm(data-dprop))^2/sigma^2);
         % log likelihood
         
-        if(length(sigma)== 1)
-            Lprop = -0.5*(norm(data-dprop))^2/sigma^2;
-        else
-            Lprop = -0.5*(norm( (data-dprop)./sigma)^2);
-        end
+        % Maybe make this L1 norm instead of L2
+        % Look at Kyle's distributions and see how smooth they are
+        % Try MC hammer algorithm to parallelize 
+        % Should be running 1M simulations
 
+        Lprop = -0.5*(norm( (data-dprop)./sigma)^2);
 
         u=rand(1,1);
 
@@ -79,8 +83,6 @@ for k=1:Niter
     end
     x_keep(:,k) = x;
     L_keep(k) = L;
-        
-        
 end
 
 
