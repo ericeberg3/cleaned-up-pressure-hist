@@ -69,7 +69,7 @@ for k=1:Niter
         % Try MC hammer algorithm to parallelize 
         % Should be running 1M simulations
 
-        Lprop = -0.5*(norm( (data-dprop)./sigma)^2);
+        Lprop = -0.5*(norm( (data-dprop)./sigma, 1))*1e-2;
 
         u=rand(1,1);
 

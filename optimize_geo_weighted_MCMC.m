@@ -113,33 +113,21 @@ invStdPWRL = 1./std(squeeze(u(11, :, :)), 0, 2, "omitmissing");
 invStdPWRL = invStdPWRL(:);
 
 %% Optimizing SC geometry
-mSCguess = [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
+mSCguess = [277.01, 1 621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
 
 
 % Use taiyi's priors except for strike angle and delta p
 taiyi_parameters = [1600.79, 914.47, 90, 0, 70.3, 183, -2.18e3, -3e6, ... 
     277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
-% taiyi_parameters(1:2) = [2015, 1151]; % 2x volume
-% taiyi_parameters(7) = -2340; % 2x volume
-
-% taiyi_parameters(1:2) = [2540, 1450]; % 4x volume
-% taiyi_parameters(7) = -2880; % 4x volume
-% taiyi_parameters_flat_SC = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, -3e6, ... 
-    % 277.01, 1621.47, 90, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, -10e6];
-% lb = [-4e6, 60, 126, mSCguess(5) - 150, mSCguess(6) - 200, -3.85e3, -2e7];
-% ub = [-2e6, 120, 146, mSCguess(5) + 150, mSCguess(6) + 200, -3.43e3, -3e6];
-
-% Let the parameters be mostly free
-% dpHMM, vertical semi-diameter, horizontal semi-diameter, dip, strike, x1,
-% x2, x3, dpSC
-% lb = [-5e6, 100, 1e3, 60, 126, mSCguess(5) - 2e3, mSCguess(6) - 2e3, -4.5e3, -2e7];
-% ub = [0, 1e3, 1e4, 90, 146, mSCguess(5) + 2e3, mSCguess(6) + 2e3, -2.5e3, 0];
 
 % ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
-lb = [3.9e9, -10e6, 150, 700, 62, -1e7];
-ub = [5*3.9e9, 0, 500, 2500, 90, -9e6];
+lb = [3.9e9, -8e6, 150, 700, 62, -3e7];
+ub = [5*3.9e9, 0, 500, 2500, 90, -1e6];
+saveFigs = true;
+ntrials = 1e5;
 
-optParams = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning);
+optParams = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning, ntrials, saveFigs);
+disp(table(optParams(1),optParams(2),optParams(3),optParams(4),optParams(5),optParams(6) ,'VariableNames',{'HMM Vol', 'dpHMM', 'vert semi-diam', 'horiz semi-diam', 'dip', 'dpSC'}))
 
 % optimizedM = taiyi_parameters_flat_SC;
 aspect_ratio = 1.7496;
@@ -220,4 +208,4 @@ collapset = decyear(datetime(collapset, 'ConvertFrom', 'datenum', 'Format', 'dd-
 
 %%
 makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, collapset, dp, optimizedM, ...
-    GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, mSCguess, coast_new, dtheta, 3);
+    GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, mSCguess, coast_new, dtheta, 3, ntrials, saveFigs);

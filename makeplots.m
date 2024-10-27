@@ -1,5 +1,5 @@
 function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, collapset, ...
-    dp, optimizedM, GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, mSCguess, coast_new, dtheta, disptype)
+    dp, optimizedM, GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, mSCguess, coast_new, dtheta, disptype, ntrials, saveFigs)
     %% Plots
     % Convert time into matlab dateyear
     year = floor(t);
@@ -24,68 +24,73 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     % xlim([collapset(3) collapset(5)]);
     legend();
     hold off
+    if(saveFigs); saveas(10, "Figures/pvt_" + num2str(ntrials, "%.1e") + "trials.fig"); end
     
     %% Making grid of displacements and tilt
-    figure(7);
-    % disptype = 2; % 1 = x, 2 = y, 3 = z
-    
-    tlo = tiledlayout(4,4);
-    if(disptype == 1)
-        title(tlo, "East Displacement vs. Time", 'FontSize', 24);
-    elseif(disptype == 2)
-        title(tlo, "North Displacement vs. Time", 'FontSize', 24);
-    else
-        title(tlo, "Vertical Displacement vs. Time", 'FontSize', 24);
-    end
-    
-    for i = 1:max(size(GPSNameList) + 1)
-        nexttile
-        if(i < length(GPSNameList) + 1)
-            if(disptype == 1)
-                plot(t(1:end-finalindex), ux(i, 1:end-finalindex), '-', 'DisplayName', 'GPS', 'LineWidth', 1.2);
-                hold on;
-                plot(t(1:end-finalindex), usim(1:end-finalindex, 1, i), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
-                plot(t(end - finalindex), ux(i, end - finalindex), 'o-', 'MarkerFaceColor','red');
-            elseif(disptype == 2)
-                plot(t(1:end-finalindex), uy(i, 1:end-finalindex), '-', 'DisplayName', 'GPS', 'LineWidth', 1.2);
-                hold on;
-                plot(t(1:end-finalindex), usim(1:end-finalindex, 2, i), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
-                plot(t(end - finalindex), uy(i, end - finalindex), 'o-', 'MarkerFaceColor','red');
-            else
-                plot(t(1:end-finalindex), uz(i, 1:end-finalindex), '-', 'DisplayName', 'GPS', 'LineWidth', 1.2);
-                hold on;
-                plot(t(1:end-finalindex), squeeze(usim(1:end-finalindex, 3, i)), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
-                plot(t(end - finalindex), uz(i, end - finalindex), 'o-', 'MarkerFaceColor','red');
-                % xline(collapset);
-            end
-            if(GPSNameList(i) == "UWEV" || GPSNameList(i) == "BYRL" || GPSNameList(i) == "CRIM")
-                    set(gca,'Color','k');
-            end
-            ylabel("Displacement (m)");
-            title(GPSNameList(i))
+    for i = 1:3
+        disptype = i;
+        figure(7);
+        % disptype = 2; % 1 = x, 2 = y, 3 = z
+        
+        tlo = tiledlayout(4,4);
+        if(disptype == 1)
+            title(tlo, "East Displacement vs. Time", 'FontSize', 24);
+        elseif(disptype == 2)
+            title(tlo, "North Displacement vs. Time", 'FontSize', 24);
         else
-            simtiltx = (gTiltHMM(1) .* dp(:, 1)) + (gTiltSC(1) .* dp(:, 2));
-            plot(t(1:end-finalindex),tiltx(1:end-finalindex), '-', 'DisplayName', 'Data', 'LineWidth', 1.2);
-            hold on;
-            plot(t(1:end-finalindex), simtiltx(1:end-finalindex), '-', 'DisplayName', 'LSQ', 'LineWidth', 1.6);
-            title("Tilt e");
-            ylim([-30, 250]);
-            ylabel("Tilt (µrad)")
-            hold off;
-            nexttile;
-            simtilty = (gTiltHMM(2) .* dp(:, 1)) + (gTiltSC(2) .* dp(:, 2));
-            plot(t(1:end-finalindex), tilty(1:end-finalindex), '-', 'DisplayName', 'Data', 'LineWidth', 1.2);
-            hold on;
-            plot(t(1:end-finalindex), simtilty(1:end-finalindex), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
-            ylim([-90, 130]);
-            ylabel("Tilt (µrad)")
-            title("Tilt n");
+            title(tlo, "Vertical Displacement vs. Time", 'FontSize', 24);
         end
-        hold off;
+        
+        for i = 1:max(size(GPSNameList) + 1)
+            nexttile
+            if(i < length(GPSNameList) + 1)
+                if(disptype == 1)
+                    plot(t(1:end-finalindex), ux(i, 1:end-finalindex), '-', 'DisplayName', 'GPS', 'LineWidth', 1.2);
+                    hold on;
+                    plot(t(1:end-finalindex), usim(1:end-finalindex, 1, i), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
+                    plot(t(end - finalindex), ux(i, end - finalindex), 'o-', 'MarkerFaceColor','red');
+                elseif(disptype == 2)
+                    plot(t(1:end-finalindex), uy(i, 1:end-finalindex), '-', 'DisplayName', 'GPS', 'LineWidth', 1.2);
+                    hold on;
+                    plot(t(1:end-finalindex), usim(1:end-finalindex, 2, i), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
+                    plot(t(end - finalindex), uy(i, end - finalindex), 'o-', 'MarkerFaceColor','red');
+                else
+                    plot(t(1:end-finalindex), uz(i, 1:end-finalindex), '-', 'DisplayName', 'GPS', 'LineWidth', 1.2);
+                    hold on;
+                    plot(t(1:end-finalindex), squeeze(usim(1:end-finalindex, 3, i)), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
+                    plot(t(end - finalindex), uz(i, end - finalindex), 'o-', 'MarkerFaceColor','red');
+                    % xline(collapset);
+                end
+                if(GPSNameList(i) == "UWEV" || GPSNameList(i) == "BYRL" || GPSNameList(i) == "CRIM")
+                        set(gca,'Color','k');
+                end
+                ylabel("Displacement (m)");
+                title(GPSNameList(i))
+            else
+                simtiltx = (gTiltHMM(1) .* dp(:, 1)) + (gTiltSC(1) .* dp(:, 2));
+                plot(t(1:end-finalindex),tiltx(1:end-finalindex), '-', 'DisplayName', 'Data', 'LineWidth', 1.2);
+                hold on;
+                plot(t(1:end-finalindex), simtiltx(1:end-finalindex), '-', 'DisplayName', 'LSQ', 'LineWidth', 1.6);
+                title("Tilt e");
+                ylim([-30, 250]);
+                ylabel("Tilt (µrad)")
+                hold off;
+                nexttile;
+                simtilty = (gTiltHMM(2) .* dp(:, 1)) + (gTiltSC(2) .* dp(:, 2));
+                plot(t(1:end-finalindex), tilty(1:end-finalindex), '-', 'DisplayName', 'Data', 'LineWidth', 1.2);
+                hold on;
+                plot(t(1:end-finalindex), simtilty(1:end-finalindex), 'DisplayName', 'LSQ', 'LineWidth', 1.6);
+                ylim([-90, 130]);
+                ylabel("Tilt (µrad)")
+                title("Tilt n");
+            end
+            hold off;
+        end
+        leg = legend('Orientation', 'Horizontal');
+        leg.Layout.Tile = 'north';
+        leg.FontSize = 14;
+        if(saveFigs); saveas(7, "Figures/displacements_" + disptype + "_" + num2str(ntrials, "%.1e") + "trials.fig"); end;
     end
-    leg = legend('Orientation', 'Horizontal');
-    leg.Layout.Tile = 'north';
-    leg.FontSize = 14;
     
     %% Print out statistics
     
@@ -101,8 +106,8 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     disp("Tilt Unweighted RMS Misfit: " + tiltrms);
     
     clear GPSrms tiltrms
-    %% Quiver Plot
     
+    %% Geometry plot 
     mHMM = optimizedM(1:8);
     mSC = optimizedM(9:end);
     
@@ -111,7 +116,9 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     hold on;
     spheroid(mSC);
     hold off;
-    
+    if(saveFigs); saveas(4, "Figures/geo_" + num2str(ntrials, "%.1e") + "trials.fig"); end
+
+    %% Quiver Plot
     % [gHMM, ~, ~, ~] = spheroid(mHMM, [x; y; z(1:length(x))], 0.25, 3.08*10^9);
     % [gSC, ~, ~, ~] = spheroid(mSC, [x; y; z(1:length(x))], 0.25, 3.08*10^9);
 
@@ -159,9 +166,7 @@ function makeplots(x, y, z, u, ux, uy, uz, tiltx, tilty, usim, t, finalindex, co
     legend;
     
     text(x', y', z', GPSNameList);
-    
-    
     hold off;
 
-
+    if(saveFigs); saveas(6, "Figures/quiver_" + num2str(ntrials, "%.1e") + "trials.fig"); end
 end
