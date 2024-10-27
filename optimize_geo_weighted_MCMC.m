@@ -134,6 +134,7 @@ aspect_ratio = 1.7496;
 opt_vert_sd = (3/(4*pi) * optParams(1) * (aspect_ratio^2))^(1/3);
 opt_horiz_sd = opt_vert_sd/(aspect_ratio);
 optimizedM = [opt_vert_sd, opt_horiz_sd, taiyi_parameters(3:7), optParams(2:5)', 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, optParams(6)];
+save("figures/optimizedM.mat");
 
 clear opt_vert_sd opt_horiz_sd
 %% Now optimize for the tilt orientation:
