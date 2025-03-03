@@ -1,4 +1,5 @@
-function data = create_MCMC_data(m, m_guess, x, y, z, u, recstds, tilt, nanstatsbeg, priormeans, priorvariances)
+function data = create_MCMC_data(m, m_guess, x, y, z, u, insarx, insary, ...
+    insaru, look, insarweight, recstds, tilt, nanstatsbeg, priormeans, priorvariances)
 
 npitloc = coord('NPIT', 'llh');
 npitloc = llh2local(npitloc(1:2), [-155.2784, 19.4073]) * 1000;
@@ -26,9 +27,20 @@ end
 clear j i consts
 
 % Forward model computations
-[gHMM, ~, ~, ~] = spheroid(mHMM, [x(1:end-1); y(1:end-1); z(1:end-1)], 0.25, 3.08*10^9);
-[gSC, ~, ~, ~] = spheroid(mSC, [x(1:end-1); y(1:end-1); z(1:end-1)], 0.25, 3.08*10^9);
+% GPS data generation
+[gHMM, ~, ~, ~] = spheroid(mHMM, [x(1:end); y(1:end); z(1:end)], 0.25, 3.08*10^9);
+[gSC, ~, ~, ~] = spheroid(mSC, [x(1:end); y(1:end); z(1:end)], 0.25, 3.08*10^9);
 
 gtot = gHMM + gSC;
-data = gtot';
+GPS_data = gtot(:);
+
+% InSAR data generation
+[gHMM, ~, ~, ~] = spheroid(mHMM, [insarx; insary; zeros(size(insarx))], 0.25, 3.08*10^9);
+[gSC, ~, ~, ~] = spheroid(mSC, [insarx; insary; zeros(size(insarx))], 0.25, 3.08*10^9);
+
+gtot = gHMM + gSC;
+insar_data = gtot' * look;
+
+data = [GPS_data; insar_data];
+
 end

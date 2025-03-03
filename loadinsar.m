@@ -4,11 +4,12 @@ fid = fopen(filename, 'rb');
 
 % Read the remaining data as 32-bit floats
 data = fread(fid, 'float32');
+data = mod(data, 2*pi);
 fclose(fid);
 
 figure; imagesc(reshape(data,4862,4672))
 colormap gray;
-clim([-10, 100]);
+clim([-10, 10]);
 
 % figure;
 % xi = linspace(-8e3, 8e3, 4862);

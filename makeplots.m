@@ -354,7 +354,7 @@ function makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, look, ti
     [X, Y] = meshgrid(xi, yi);
     
     % Interpolate vertical displacement data (assumed to be in insaru(3,:))
-    insaru_grid = griddata(insarx, insary, insaru(3, :), X, Y, 'cubic');
+    insaru_grid = griddata(insarx, insary, insaru, X, Y, 'cubic');
     
     % Plot using pcolor for a 2D color map
     pcolor(X, Y, insaru_grid);

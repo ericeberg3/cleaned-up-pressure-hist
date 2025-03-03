@@ -1,5 +1,5 @@
-function [optParams, posterior] = optimize_SC_MCMC(m_known, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, ...
-    invStdPWRL, tiltstd, tiltreduced, nanstatbeginning, ntrials, saveFigs)
+function [optParams, posterior] = optimize_SC_MCMC(m_known, lb, ub, xopt, yopt, zopt, u1d, ...
+     insarx, insary, insaru, look, insarweight, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning, ntrials, saveFigs)
 
 GPS_std = 1./invStdPWRL;
 vol = (4/3 * pi * m_known(1) * m_known(2)^2);
@@ -7,16 +7,15 @@ priormeans = [vol, m_known(8), m_known(9), m_known(10), m_known(11), m_known(end
 paramNames = ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
 
 bnds = [lb; ub]';
-sigma = ones(size(u1d));
-for i = 1:3
-    % TEMPORARILY changed i -> 1 to test equal weighting of all components
-    sigma(:, i) = sigma(:, 1) * GPS_std(i);
+sigma = ones(size([u1d(:);insaru])) .* insarweight;
+for i = 1:length(u1d(:))
+    sigma(i) = GPS_std(ceil(i / size(u1d, 1)));
 end
 
 
 xstep = 0.02; % 0.007
-[x_keep, L_keep, count] = mcmc('create_MCMC_data',u1d,priormeans,xstep, bnds, sigma, ntrials, ...
-    m_known, [xopt, xtilt], [yopt, ytilt], [zopt, 0], u1d, ...
+[x_keep, L_keep, count] = mcmc('create_MCMC_data',[u1d(:);insaru],priormeans,xstep, bnds, sigma, ntrials, ...
+    m_known, [xopt], [yopt], [zopt], u1d, insarx, insary, insaru, look, insarweight, ...
     [invStdPWRL(1), invStdPWRL(2), invStdPWRL(3),1/((tiltstd)), 1/((tiltstd))], tiltreduced(1:2), nanstatbeginning);
 
 burn = 5000;

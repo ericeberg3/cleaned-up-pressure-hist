@@ -14,8 +14,8 @@ gps_sigma = 1./gps_sigma;
 
 %% Use posterior distribution to generate a list of many candidate geometries
 dtheta = 0;
-randIdx = randi(size(posterior, 2), [1, N_draws]);
-geo_samples = posterior(:, randIdx);
+randIdx = randi(size(posterior, 1), [1, N_draws]);
+geo_samples = posterior(randIdx, :)';
 geo_samples(:, 1) = optParams;
 dp_dist = zeros(N_draws, N_noise, ntime*2);
 % h = waitbar(0,'Analyzing errors...');

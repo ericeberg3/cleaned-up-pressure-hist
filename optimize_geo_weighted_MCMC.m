@@ -202,15 +202,34 @@ roman_parameters = [vert_sd_HMM, vert_sd_HMM/(aspect_ratio_HMM), 90, 0, 0, 0, -9
     vert_sd_SC, vert_sd_SC/(aspect_ratio_SC), 90, 136, -200, -1.9e3,-3.2e3 - vert_sd_SC, -1e6];
 
 % ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
-lb = [4e9, -8e6, 150, 700, 62, -3e7];
+lb = [4e9, -8e6, 150, 700, 40, -3e7];
 ub = [9.5e9, 0, 500, 2500, 90, -1e6];
 saveFigs = false;
-ntrials = 1e5;
+ntrials = 1e4;
+nwalkers = 100;
+
+
+%%
+% Make synthetic insar data
+insarx = (rand(1, 1e3) - 0.5) * 2 * 8e3;
+insary = (rand(1, 1e3) - 0.5) * 2 * 8e3;
+insarz = zeros(size(insary));
+insaru = spheroid(taiyi_parameters(1:8), [insarx; insary; insarz], 0.25, 3.08*10^9) + ...
+    spheroid(taiyi_parameters(9:end), [insarx; insary; insarz], 0.25, 3.08*10^9);
+insaru = insaru(3, :)';
+insarweight = 1;
+look = [0;0;1];
 
 %% UNCOMMENT FOR MCMC
-[optParams, posterior] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, saveFigs);
+delete(gcp('nocreate'));
+% [optParams, posterior] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, yopt, zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, saveFigs);
+[optParams, posterior] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, ...
+    yopt, zopt, u1d, insarx, insary, insaru, look, insarweight, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, saveFigs);
+% [optParams, posterior] = optimize_SC_MCMC_par(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, ...
+%     zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, nwalkers, saveFigs);
 disp(table(optParams(1),optParams(2),optParams(3),optParams(4),optParams(5),optParams(6),'VariableNames',{'HMM Vol', 'dpHMM', 'vert semi-diam', 'horiz semi-diam', 'dip', 'dpSC'}))
 
+posterior = posterior';
 aspect_ratio = 1.7496;
 opt_vert_sd = (3/(4*pi) * optParams(1) * (aspect_ratio^2))^(1/3);
 opt_horiz_sd = opt_vert_sd/(aspect_ratio);
@@ -346,14 +365,6 @@ disp("Reduced chi^2 (no tilt) = " + chi2/DOF);
 collapset = D.gps_info.t_events(26:end);
 collapset = decyear(datetime(collapset, 'ConvertFrom', 'datenum', 'Format', 'dd-MM-yy'));
 % [ampHMM, ampSC] = ExtractCollapseAmplitude([dp(:, 1)'; dp(:, 2)'], t, collapset, t(3) - t(2));
-
-%%
-% Make synthetic insar data
-insarx = (rand(1, 1e3) - 0.5) * 2 * 8e3;
-insary = (rand(1, 1e3) - 0.5) * 2 * 8e3;
-insarz = zeros(size(insary));
-insaru = spheroid(optimizedM(9:end), [insarx; insary; insarz], 0.25, 3.08*10^9);
-look = [0;0;0];
 
 
 %%
