@@ -205,16 +205,37 @@ roman_parameters = [vert_sd_HMM, vert_sd_HMM/(aspect_ratio_HMM), 90, 0, 0, 0, -9
 lb = [4e9, -8e6, 150, 700, 40, -3e7];
 ub = [9.5e9, 0, 500, 2500, 90, -1e6];
 saveFigs = false;
-ntrials = 1e5;
+ntrials = 1e6;
 nwalkers = 100;
 
+
+%%
+% Make synthetic insar data
+% insarx = (rand(1, 1e1) - 0.5) * 2 * 8e3;
+% insary = (rand(1, 1e1) - 0.5) * 2 * 8e3;
+% insarz = zeros(size(insary));
+% insaru = spheroid(taiyi_parameters(1:8), [insarx; insary; insarz], 0.25, 3.08*10^9) + ...
+%     spheroid(taiyi_parameters(9:end), [insarx; insary; insarz], 0.25, 3.08*10^9);
+% insaru = insaru(3, :)';
+insarweight = 1e10;
+look = [0;0;1];
+
+insar_data124 = readmatrix('data/track124_20180508_20180806.txt', 'Delimiter', '\t');
+insarx = insar_data124(:,1);
+insary = insar_data124(:,2);
+insaru = insar_data124(:,3);
+
 %% UNCOMMENT FOR MCMC
-delete(gcp('nocreate'));
-% [optParams, posterior] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, saveFigs);
-[optParams, posterior] = optimize_SC_MCMC_par(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, ...
-    zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, nwalkers, saveFigs);
+% delete(gcp('nocreate'));
+[optParams, posterior] = optimize_SC_MCMC_noinsar(taiyi_parameters, lb, ub, xopt, yopt, zopt, u1d, ...
+    daily_inv_std, tiltstd, nanstatend, ntrials, saveFigs);
+% [optParams, posterior] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, ...
+%     yopt, zopt, u1d, insarx, insary, insaru, look, insarweight, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, saveFigs);
+% [optParams, posterior] = optimize_SC_MCMC_par(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, ...
+%     zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, nwalkers, saveFigs);
 disp(table(optParams(1),optParams(2),optParams(3),optParams(4),optParams(5),optParams(6),'VariableNames',{'HMM Vol', 'dpHMM', 'vert semi-diam', 'horiz semi-diam', 'dip', 'dpSC'}))
 
+posterior = posterior';
 aspect_ratio = 1.7496;
 opt_vert_sd = (3/(4*pi) * optParams(1) * (aspect_ratio^2))^(1/3);
 opt_horiz_sd = opt_vert_sd/(aspect_ratio);
@@ -351,15 +372,23 @@ collapset = D.gps_info.t_events(26:end);
 collapset = decyear(datetime(collapset, 'ConvertFrom', 'datenum', 'Format', 'dd-MM-yy'));
 % [ampHMM, ampSC] = ExtractCollapseAmplitude([dp(:, 1)'; dp(:, 2)'], t, collapset, t(3) - t(2));
 
-%%
-% Make synthetic insar data
-insarx = (rand(1, 1e3) - 0.5) * 2 * 8e3;
-insary = (rand(1, 1e3) - 0.5) * 2 * 8e3;
-insarz = zeros(size(insary));
-insaru = spheroid(optimizedM(9:end), [insarx; insary; insarz], 0.25, 3.08*10^9);
-look = [0;0;0];
 
+%% Make synthetic insar data
 
+insar_data124 = readmatrix('data/track124_20180508_20180806.txt', 'Delimiter', '\t');
+
+insarbnd = [-8e3, -8e3; 8e3, 8e3];
+insarxy=llh2local(insar_data124(:,1:2)', [-155.2784, 19.4073])'.*1e3;
+in_bounds = (data_out(:,1) >= insarbnd()) & (data_out(:,1) <= x_max) & ...
+            (data_out(:,2) >= y_min) & (data_out(:,2) <= y_max);
+
+% Filter the data
+data_filtered = data_out(in_bounds, :);
+
+insarx = insarxy(1,:);
+insary = insarxy(2,:);
+insaru = insar_data124(:,3);
+look = [0;0;1];
 %%
 makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, look, tiltx, tilty, usim, t, nanstatend, nanstatbeginning, finalindex, collapset, dp, dp_low, dp_high, ...
     optimizedM, GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, coast_new, dtheta, 3, ntrials, offsets, saveFigs);

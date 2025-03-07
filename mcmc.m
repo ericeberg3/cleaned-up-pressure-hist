@@ -25,7 +25,8 @@ function  [x_keep, L_keep, count] = mcmc(func,data,x0,xstep,xbnds,sigma,Niter,va
 % calling program
 % rng('shuffle');
 
-fun  = fcnchk(func);
+fun = fcnchk(func);
+% fun = str2func(func);
 
 %number of elements in x
 Nparams = length(x0);

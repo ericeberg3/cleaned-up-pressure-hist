@@ -13,7 +13,7 @@ for i = 1:length(u1d(:))
 end
 
 
-xstep = 0.02; % 0.007
+xstep = 0.18; % 0.007
 [x_keep, L_keep, count] = mcmc('create_MCMC_data',[u1d(:);insaru],priormeans,xstep, bnds, sigma, ntrials, ...
     m_known, [xopt], [yopt], [zopt], u1d, insarx, insary, insaru, look, insarweight, ...
     [invStdPWRL(1), invStdPWRL(2), invStdPWRL(3),1/((tiltstd)), 1/((tiltstd))], tiltreduced(1:2), nanstatbeginning);

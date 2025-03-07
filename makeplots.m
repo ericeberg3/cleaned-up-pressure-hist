@@ -357,13 +357,24 @@ function makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, look, ti
     insaru_grid = griddata(insarx, insary, insaru, X, Y, 'cubic');
     
     % Plot using pcolor for a 2D color map
-    pcolor(X, Y, insaru_grid);
-    shading interp;           % Smooth out color transitions
-    colormap jet;             % Set the colormap (try other maps if needed)
+    pcolor(X, Y, insaru_grid, 'FaceAlpha', 0.7);
+    shading interp;           % Smooth out color transition
+    colormap(flipud(jet));             % Set the colormap (try other maps if needed)
     colorbar;                 % Add a colorbar for reference
+
+    currentColormap = colormap;
     
     % Optionally, adjust the color limits to reveal gradients
-    clim([min(insaru_grid(:)), max(insaru_grid(:))]);
+    cLimits = [min(insaru_grid(:)), max(insaru_grid(:))];
+    nColors = size(currentColormap, 1);
+    clim(cLimits);
+
+    % Get GPS equivalent insar displacements
+    gpsInsarValues = u1d * look;
+    colorIndices = round((gpsInsarValues - cLimits(1)) / (cLimits(2) - cLimits(1)) * (nColors - 1)) + 1;
+    % Ensure indices are within bounds
+    colorIndices = min(max(colorIndices, 1), nColors);
+    gpsColors = currentColormap(colorIndices, :);
 
     % Plot GPS on top
     realquiver = quiver(x(~nanstat)', y(~nanstat)', u1d(:, 1) * radscale, u1d(:, 2) * radscale,  ...
@@ -371,6 +382,7 @@ function makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, look, ti
     % quiver3(mSCguess(5),mSCguess(6), mSCguess(7), optimizedM(13) - mSCguess(5), optimizedM(14) - mSCguess(6), optimizedM(15) - mSCguess(7), 'AutoScale', 'off', 'LineWidth', 2.75, 'MaxHeadSize', 0.5, 'Color', '#f77036', 'DisplayName','SC Center Shift');
     simquiver = quiver(x', y', u1d_LSQ(:, 1) * radscale, u1d_LSQ(:, 2) * radscale, ...
         'AutoScale', 'off', 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', '#A2142F', 'DisplayName','Optimization Result');
+    scatter(x, y, 100, gpsColors, 'filled', 'HandleVisibility', 'off');
 
     % Plot vert. displacement circles:
     theta = linspace(0, 2*pi, 50);  
@@ -412,7 +424,7 @@ function makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, look, ti
     plot(x_ref_circle, y_ref_circle, 'r', 'LineWidth', 2, 'HandleVisibility','off');
     text(x_ref - 270, y_ref - r_ref - 200, "10 cm", 'Color', 'red', 'FontSize', 12, 'HandleVisibility','off');
     quiver(x_ref, y_ref, -radscale * 0.5, 0, 'LineWidth',2.75, 'MaxHeadSize', 0.3, 'Color', 'red', 'HandleVisibility','off'); % Vector scale reference
-    text(x_ref - radscale*0.4, y_ref -radscale*0.1, "50 cm", 'Color', 'red', 'FontSize', 12);
+    text(x_ref - radscale*0.4, y_ref -radscale*0.1, "50 cm", 'Color', 'red', 'FontSize', 12, 'HandleVisibility','off');
     xlabel('Easting (m)', "FontSize", 18);
     ylabel('Northing (m)', "FontSize", 18);
     zlabel('Vertical (m)',  "FontSize", 18);

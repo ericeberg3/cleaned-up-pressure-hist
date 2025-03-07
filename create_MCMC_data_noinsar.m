@@ -1,5 +1,4 @@
-function data = create_MCMC_data(m, m_guess, x, y, z, u, insarx, insary, ...
-    insaru, look, insarweight, recstds, tilt, nanstatsbeg, priormeans, priorvariances)
+function data = create_MCMC_data_noinsar(m, m_guess, x, y, z, recstds, nanstatsbeg)
 
 npitloc = coord('NPIT', 'llh');
 npitloc = llh2local(npitloc(1:2), [-155.2784, 19.4073]) * 1000;
@@ -27,12 +26,9 @@ end
 clear j i consts
 
 % Forward model computations
-% Originally had [x(1:end-1); y(1:end-1); z(1:end-1)]. Not sure why?
-[gHMM, ~, ~, ~] = spheroid(mHMM, [x(1:end); y(1:end); z(1:end)], 0.25, 3.08*10^9);
-[gSC, ~, ~, ~] = spheroid(mSC, [x(1:end); y(1:end); z(1:end)], 0.25, 3.08*10^9);
+[gHMM, ~, ~, ~] = spheroid(mHMM, [x; y; z], 0.25, 3.08*10^9);
+[gSC, ~, ~, ~] = spheroid(mSC, [x; y; z], 0.25, 3.08*10^9);
 
 gtot = gHMM + gSC;
-GPS_data = gtot';
-
-
+data = gtot';
 end
