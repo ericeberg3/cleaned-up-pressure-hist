@@ -202,8 +202,10 @@ roman_parameters = [vert_sd_HMM, vert_sd_HMM/(aspect_ratio_HMM), 90, 0, 0, 0, -9
     vert_sd_SC, vert_sd_SC/(aspect_ratio_SC), 90, 136, -200, -1.9e3,-3.2e3 - vert_sd_SC, -1e6];
 
 % ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
-lb = [4e9, -8e6, 150, 700, 40, -3e7];
-ub = [9.5e9, 0, 500, 2500, 90, -1e6];
+% lb = [1e6, -10e6, 150, 700, 40, -3e7];
+% ub = [1e10, 0, 1e3, 2500, 90, -1e5]; 
+lb = [1e6, -1e7, 150, 700, 40, -1e7];
+ub = [1e10, 1e7, 1e3, 2500, 90, 1e7]; 
 saveFigs = false;
 ntrials = 1e5;
 nwalkers = 100;
@@ -217,23 +219,70 @@ nwalkers = 100;
 % insaru = spheroid(taiyi_parameters(1:8), [insarx; insary; insarz], 0.25, 3.08*10^9) + ...
 %     spheroid(taiyi_parameters(9:end), [insarx; insary; insarz], 0.25, 3.08*10^9);
 % insaru = insaru(3, :)';
-insarweight = 1e10;
-look = [0;0;1];
+insarstddev = 1;
+inc_angle = -deg2rad(39);
+taiyi_parameters(end) = -0.88e6;
+taiyi_parameters(8) = 1.55e6;
 
 insar_data124 = readmatrix('data/track124_20180508_20180806.txt', 'Delimiter', '\t');
-insarx = insar_data124(:,1);
-insary = insar_data124(:,2);
-insaru = insar_data124(:,3);
+insarbnd = [-1e4, -1e4; 1e4, 1e4];
+insarxy=llh2local(insar_data124(:,1:2)', [-155.2784, 19.4073])'.*1e3;
+in_bounds = (insarxy(:,1) >= insarbnd(1,1)) & (insarxy(:,1) <= insarbnd(2,1)) & ...
+            (insarxy(:,2) >= insarbnd(1,2)) & (insarxy(:,2) <= insarbnd(2,2));
 
-%% UNCOMMENT FOR MCMC
-% delete(gcp('nocreate'));
-[optParams, posterior] = optimize_SC_MCMC_noinsar(taiyi_parameters, lb, ub, xopt, yopt, zopt, u1d, ...
-    daily_inv_std, tiltstd, nanstatend, ntrials, saveFigs);
-% [optParams, posterior] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, ...
-%     yopt, zopt, u1d, insarx, insary, insaru, look, insarweight, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, saveFigs);
+insarx = randn(1, 1e3) * 3e3;%insarxy(in_bounds,1)';
+insary = randn(1, 1e3) * 3e3;%insarxy(in_bounds,2)';
+% block_size = insar_data124(in_bounds,4)';
+block_size = 8 * ones(size(insarx));
+
+insaru = spheroid(taiyi_parameters(1:8), [insarx; insary; zeros(size(insarx))], 0.25, 3.08*10^9) + ...
+    spheroid(taiyi_parameters(9:end), [insarx; insary; zeros(size(insarx))], 0.25, 3.08*10^9);
+u1d_syn = spheroid(taiyi_parameters(1:8), [x(~nanstatend); y(~nanstatend); z(~nanstatend)], 0.25, 3.08*10^9)' + ...
+    spheroid(taiyi_parameters(9:end), [x(~nanstatend); y(~nanstatend); z(~nanstatend)], 0.25, 3.08*10^9)';
+% look = [sin(inc_angle); 0.6; cos(inc_angle)];
+look = [0;0;1];
+look = look ./ norm(look);
+insaru = insaru' * look;
+
+%% MCMC Static inversion
+gps_weights = logspace(0, 2, 10);
+delete(gcp('nocreate'));
+% [optParams, posterior] = optimize_SC_MCMC_noinsar(taiyi_parameters, lb, ub, xopt, yopt, zopt, u1d, ...
+%     daily_inv_std, tiltstd, nanstatend, ntrials, saveFigs);
+gps_l2s = zeros(1,10);
+insar_l2s = zeros(1,10);
+% for i = 1:length(gps_weights)
+gps_weights(4) = 4;
+i = 4;
+[optParams, posterior, gps_l2, insar_l2] = optimize_SC_MCMC(taiyi_parameters, lb, ub, xopt, ...
+yopt, zopt, u1d_syn, insarx, insary, insaru, look, insarstddev, daily_inv_std, tiltstd, tiltreduced, ...
+nanstatend, ntrials, gps_weights(i), saveFigs);
+disp(table(optParams(1),optParams(2),optParams(3),optParams(4),optParams(5),optParams(6),'VariableNames',{'HMM Vol', 'dpHMM', 'vert semi-diam', 'horiz semi-diam', 'dip', 'dpSC'}))
+
+%%
+% Loop over each parameter to compute and plot autocorrelation
+for i = 1:6
+    % Get the chain for parameter i and remove the mean
+    param_chain = posterior(i, :) - mean(posterior(i, :));
+    
+    % Compute autocorrelation with normalization (coeff gives correlation coefficient)
+    [acf, lags] = xcorr(param_chain, 'coeff');
+    
+    % Plot the autocorrelation function (only non-negative lags if desired)
+    figure(18);
+    subplot(3, 2, i);
+    stem(lags, acf, 'filled');
+    title(sprintf('Autocorrelation for Parameter %d', i));
+    % xlim([0, 1.5e4])
+    xlabel('Lag');
+    ylabel('Autocorrelation');
+end
+
+gps_l2s(i) = gps_l2;
+insar_l2s(i) = insar_l2;
+% end
 % [optParams, posterior] = optimize_SC_MCMC_par(taiyi_parameters, lb, ub, xopt, xtilt, yopt, ytilt, ...
 %     zopt, u1d, daily_inv_std, tiltstd, tiltreduced, nanstatend, ntrials, nwalkers, saveFigs);
-disp(table(optParams(1),optParams(2),optParams(3),optParams(4),optParams(5),optParams(6),'VariableNames',{'HMM Vol', 'dpHMM', 'vert semi-diam', 'horiz semi-diam', 'dip', 'dpSC'}))
 
 posterior = posterior';
 aspect_ratio = 1.7496;
@@ -245,6 +294,76 @@ disp("MCMC done");
 
 save("figures/optimizedM.mat");
 
+%% Plot correlation btwn parameters
+figure(12);
+
+% Define parameter names (adjust as appropriate)
+paramNames = {'HMM Vol', 'dpHMM', 'vert semi-diam', 'horiz semi-diam', 'dip', 'dpSC'};
+posterior = posterior';
+nparams = size(posterior, 1);
+
+% Number of bins for the 2D density estimation
+numBins = 30;
+
+% Create a new figure
+set(gcf, 'Color', 'w');  % Set white background (optional)
+
+% Loop over the 6x6 grid of subplots
+for i = 1:nparams
+    for j = 1:nparams
+        subplot(nparams, nparams, (i-1)*nparams + j);
+        
+        if i > j
+            % Lower-triangular: plot the 2D density of parameter i vs parameter j
+            xdata = posterior(j, :);
+            ydata = posterior(i, :);
+            
+            % Compute a 2D histogram
+            [N, edgesX, edgesY] = histcounts2(xdata, ydata, numBins);
+            
+            % Compute bin centers from edges
+            centersX = (edgesX(1:end-1) + edgesX(2:end)) / 2;
+            centersY = (edgesY(1:end-1) + edgesY(2:end)) / 2;
+            
+            % Create a grid for contour plotting
+            [X, Y] = meshgrid(centersX, centersY);
+            
+            % Plot filled contours (you can adjust the number of contour levels)
+            contourf(X, Y, N', 10, 'LineColor', 'none');
+            colormap('hot');  % Choose a colormap, e.g., 'hot'
+            % Optionally, you can add a colorbar:
+            % colorbar;
+            
+            xlabel(paramNames{j}, 'FontSize', 8);
+            ylabel(paramNames{i}, 'FontSize', 8);
+            grid on;
+            
+        elseif i == j
+            % Diagonal: plot a histogram for the parameter
+            histogram(posterior(i, :), 30, 'FaceColor', [0.2 0.6 0.5]);
+            title(paramNames{i}, 'FontSize', 9);
+        else
+            % Upper-triangular: leave blank
+            axis off;
+        end
+        
+        % Optionally, adjust tick labels and font size for clarity
+        set(gca, 'FontSize', 8);
+    end
+end
+
+sgtitle("2D Density Plots (Lower Triangle) and Histograms (Diagonal) for MCMC Parameters");
+
+
+
+% figure(18);
+% scatter(gps_l2s, insar_l2s, [], gps_weights, 'filled');
+% xlabel("GPS L2 Norm")
+% ylabel("inSAR L2 norm")
+% colorbar;
+% colormap jet;
+
+%%
 % optimizedM = taiyi_parameters;
 
 % clear opt_vert_sd opt_horiz_sd
@@ -373,26 +492,36 @@ collapset = decyear(datetime(collapset, 'ConvertFrom', 'datenum', 'Format', 'dd-
 % [ampHMM, ampSC] = ExtractCollapseAmplitude([dp(:, 1)'; dp(:, 2)'], t, collapset, t(3) - t(2));
 
 
-%% Make synthetic insar data
+%% Organize Insar data
 
-insar_data124 = readmatrix('data/track124_20180508_20180806.txt', 'Delimiter', '\t');
+% insar_data124 = readmatrix('data/track124_20180508_20180806.txt', 'Delimiter', '\t');
+% 
+% insarbnd = [-1e4, -1e4; 1e4, 1e4];
+% insarxy=llh2local(insar_data124(:,1:2)', [-155.2784, 19.4073])'.*1e3;
+% in_bounds = (insarxy(:,1) >= insarbnd(1,1)) & (insarxy(:,1) <= insarbnd(2,1)) & ...
+%             (insarxy(:,2) >= insarbnd(1,2)) & (insarxy(:,2) <= insarbnd(2,2));
+% 
+% insardata_cropped = [insarxy(in_bounds,:), insar_data124(in_bounds, 3), insar_data124(in_bounds,4)];
+% % Filter the data
+% % data_filtered = data_out(in_bounds, :);
+% 
+% insarx = insardata_cropped(:,1);
+% insary = insardata_cropped(:,2);
+% insaru = insardata_cropped(:,3);
+% block_size = insardata_cropped(:,4);
+% 
+% inc_angle = -deg2rad(39);
+% look = [sin(inc_angle); -0.6; cos(inc_angle)];
+% look = look ./ norm(look);
 
-insarbnd = [-1e4, -1e4; 1e4, 1e4];
-insarxy=llh2local(insar_data124(:,1:2)', [-155.2784, 19.4073])'.*1e3;
-in_bounds = (insarxy(:,1) >= insarbnd(1,1)) & (insarxy(:,1) <= insarbnd(2,1)) & ...
-            (insarxy(:,2) >= insarbnd(1,2)) & (insarxy(:,2) <= insarbnd(2,2));
+%% Make synthetic insar data based on optimized geometry
+insaru_pred = spheroid(taiyi_parameters(1:8), [insarx; insary; zeros(size(insarx))], 0.25, 3.08*10^9) + ...
+    spheroid(taiyi_parameters(9:end), [insarx; insary; zeros(size(insarx))], 0.25, 3.08*10^9);
+insaru_pred = insaru_pred' * look;
 
-insardata_cropped = [insarxy(in_bounds,:), insar_data124(in_bounds, 3)];
-% Filter the data
-% data_filtered = data_out(in_bounds, :);
-
-insarx = insardata_cropped(:,1);
-insary = insardata_cropped(:,2);
-insaru = insardata_cropped(:,3);
-inc_angle = deg2rad(39);
-look = [sin(inc_angle); 0; cos(inc_angle)];
 %%
-makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, look, tiltx, tilty, usim, t, nanstatend, nanstatbeginning, finalindex, collapset, dp, dp_low, dp_high, ...
-    optimizedM, GPSNameList, gTiltHMM, gTiltSC, xtilt, ytilt, tiltreduced, radscale, coast_new, dtheta, 3, ntrials, offsets, saveFigs);
- 
+makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, insaru_pred, block_size, look, tiltx, tilty, usim, t, nanstatend, ...
+    nanstatbeginning, finalindex, collapset, dp, dp_low, dp_high, optimizedM, GPSNameList, gTiltHMM, ...
+    gTiltSC, xtilt, ytilt, tiltreduced, radscale, coast_new, dtheta, 3, ntrials, offsets, saveFigs);
+
 %%% TODO - Compare insar with tilt data to see if the tilt has an offsetf

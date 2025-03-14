@@ -41,6 +41,6 @@ GPS_data = gtot(:);
 gtot = gHMM + gSC;
 insar_data = gtot' * look;
 
+% data = [insar_data];
 data = [GPS_data; insar_data];
-
 end
