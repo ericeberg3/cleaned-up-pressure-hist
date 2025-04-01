@@ -46,7 +46,7 @@ N_insar = length(varargin{6});
 x = x0;
 prior_weight = 4e-1;
 dprop = fun(x, varargin{:});
-L_scaling = 1;%5e-2; %3e-4
+L_scaling = 1e-1;%5e-2; %3e-4
 
 L_gps = -0.5 * sum(((data(1:N_gps) - dprop(1:N_gps))./sigma(1:N_gps)).^2);
 L_insar = -0.5 * sum(((data(N_gps+1:end) - dprop((N_gps+1:end)))./sigma((N_gps+1:end))).^2);

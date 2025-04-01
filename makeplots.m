@@ -356,5 +356,6 @@ function makeplots(x, y, z, u, u1d, ux, uy, uz, insarx, insary, insaru, insaru_p
     subplot(2, 2, 3);
     plot_insar(insarx, insary, insaru - insaru_pred, block_size, look, x, y, u1d, u1d_LSQ, nanstat, ...
     radscale, 31, GPSNameList, coast_new,cLimits, saveFigs);
+    
     title("Residual");
 end

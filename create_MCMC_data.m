@@ -4,15 +4,13 @@ function data = create_MCMC_data(m, m_guess, x, y, z, u, insarx, insary, ...
 npitloc = coord('NPIT', 'llh');
 npitloc = llh2local(npitloc(1:2), [-155.2784, 19.4073]) * 1000;
 
-aspect_ratio = 1.7496;
-opt_vert_sd = (3/(4*pi) * m(1) * (aspect_ratio^2))^(1/3);
-opt_horiz_sd = opt_vert_sd/(aspect_ratio);
+% aspect_ratio = 1.7496;
+% opt_vert_sd = (3/(4*pi) * m(1) * (aspect_ratio^2))^(1/3);
+% opt_horiz_sd = opt_vert_sd/(aspect_ratio);
 
-mHMM = [opt_vert_sd, opt_horiz_sd, m_guess(3:6), m_guess(7) - abs(opt_vert_sd - m_guess(1)), m(2)];
-% mHMM = [1600.79, 914.47, 90, 0, 70.3, 183, -1940, m(1)];
-mSCguess = m_guess(9:end); % [277.01, 1621.47, 63, 136, npitloc(1) + 1890, npitloc(2) - 3030, -3630, 1e7];
-mSC = [m(2:4), mSCguess(4:end-1), m(end)];
-% consts = m(17:end);
+m_full = get_full_m(m_guess, m, true);
+mHMM = m_full(1:8);
+mSC = m_full(9:end);
 
 % tilt(1) = tilt(1) * cos(tiltoffset(1)) - sin(tiltoffset(1));
 % tilt(2) = tilt(2) * cos(tiltoffset(1)) + sin(tiltoffset(1));

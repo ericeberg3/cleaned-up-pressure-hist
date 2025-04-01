@@ -15,7 +15,7 @@ gps_sigma = 1./gps_sigma;
 %% Use posterior distribution to generate a list of many candidate geometries
 dtheta = 0;
 randIdx = randi(size(posterior, 1), [1, N_draws]);
-geo_samples = posterior(randIdx, :)';
+geo_samples = posterior(:, randIdx);
 geo_samples(:, 1) = optParams;
 dp_dist = zeros(N_draws, N_noise, ntime*2);
 % h = waitbar(0,'Analyzing errors...');
@@ -27,12 +27,8 @@ end
 %% TODO - Incorporate uncertainties in shear modulus (and maybe poisson's ratio) into error analysis
 for i = 1:N_draws
     % Format new geometry into optimizedM array
+    m_samp = get_full_m(taiyi_parameters, geo_samples(:,i), true);
 
-    aspect_ratio = 1.7496;
-    opt_vert_sd = (3/(4*pi) * geo_samples(1, i) * (aspect_ratio^2))^(1/3);
-    opt_horiz_sd = opt_vert_sd/(aspect_ratio);
-    m_samp = [opt_vert_sd, opt_horiz_sd, taiyi_parameters(3:6), taiyi_parameters(7) - abs(opt_vert_sd - taiyi_parameters(1)), geo_samples(2:5, i)', 136, ...
-        npitloc(1) + 1890, npitloc(2) - 3030, -3630, geo_samples(6, i)];
     % Create new green's functions
     [gHMM_samp, gSC_samp] = creategreens(m_samp(1:8), m_samp(9:end));
     [gTiltHMM_samp, gTiltSC_samp] = createtiltgreens(m_samp(1:8), m_samp(9:end), dtheta, false);

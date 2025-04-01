@@ -2,10 +2,10 @@ function [optParams, posterior, gps_l2, insar_l2] = optimize_SC_MCMC(m_known, lb
      insarx, insary, insaru, look, insarweight, invStdPWRL, tiltstd, tiltreduced, nanstatbeginning, ntrials, gps_weight, saveFigs)
 
 GPS_std = 1./invStdPWRL;
-vol = (4/3 * pi * m_known(1) * m_known(2)^2);
-priormeans = [vol, m_known(8), m_known(9), m_known(10), m_known(11), m_known(end)];
-priormeans = priormeans + 0.1*randn(1,6) .* priormeans;
-paramNames = ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
+priormeans = get_full_m(m_known, [], false);
+% priormeans = priormeans + 0.1*randn(1,6) .* priormeans;
+% paramNames = ["HMM volume", "dpHMM", "vert semi-diameter", "horiz semi-diameter", "dip", "dpSC"];
+paramNames = ["HMM volume", "dpHMM", "SC Volume", "SC aspect ratio", "dip", "dpSC"];
 
 bnds = [lb; ub]';
 sigma = ones(size([u1d(:);insaru])) .* insarweight; % Insar stddev ~0.2m
@@ -18,7 +18,7 @@ end
 % xstep = 0.02*ones(1,6); % 0.02
 % xstep(4) = 0.007; % horiz semi-diam 
 
-xstep = 7e-2*ones(1,6); % 0.02
+xstep = 5e-2*ones(1,6); % 0.02
 
 % gps_weight = 4;
 % xstep(4) = 0.02; % horiz semi-diam 
